@@ -124,9 +124,10 @@ def create_face_selector_program() -> ArgumentParser:
 	group_face_selector.add_argument('--face-selector-gender', help = wording.get('help.face_selector_gender'), default = config.get_str_value('face_selector', 'face_selector_gender'), choices = facefusion.choices.face_selector_genders)
 	group_face_selector.add_argument('--face-selector-race', help = wording.get('help.face_selector_race'), default = config.get_str_value('face_selector', 'face_selector_race'), choices = facefusion.choices.face_selector_races)
 	group_face_selector.add_argument('--reference-face-position', help = wording.get('help.reference_face_position'), type = int, default = config.get_int_value('face_selector', 'reference_face_position', '0'))
+	group_face_selector.add_argument('--reference-face-path', help='Path to a custom reference face image', type=str, default=None)
 	group_face_selector.add_argument('--reference-face-distance', help = wording.get('help.reference_face_distance'), type = float, default = config.get_float_value('face_selector', 'reference_face_distance', '0.3'), choices = facefusion.choices.reference_face_distance_range, metavar = create_float_metavar(facefusion.choices.reference_face_distance_range))
 	group_face_selector.add_argument('--reference-frame-number', help = wording.get('help.reference_frame_number'), type = int, default = config.get_int_value('face_selector', 'reference_frame_number', '0'))
-	job_store.register_step_keys([ 'face_selector_mode', 'face_selector_order', 'face_selector_gender', 'face_selector_race', 'face_selector_age_start', 'face_selector_age_end', 'reference_face_position', 'reference_face_distance', 'reference_frame_number' ])
+	job_store.register_step_keys([ 'face_selector_mode', 'face_selector_order', 'face_selector_gender', 'face_selector_race', 'face_selector_age_start', 'face_selector_age_end', 'reference_face_position', 'reference_face_distance', 'reference_frame_number', 'reference_face_path' ])
 	return program
 
 
@@ -266,7 +267,15 @@ def create_step_index_program() -> ArgumentParser:
 
 
 def collect_step_program() -> ArgumentParser:
-	return ArgumentParser(parents = [ create_face_detector_program(), create_face_landmarker_program(), create_face_selector_program(), create_face_masker_program(), create_frame_extraction_program(), create_output_creation_program(), create_processors_program() ], add_help = False)
+	return ArgumentParser(parents = [
+		create_face_detector_program(),
+		create_face_landmarker_program(),
+		create_face_selector_program(),
+		create_face_masker_program(),
+		create_frame_extraction_program(),
+		create_output_creation_program(),
+		create_processors_program()
+	], add_help = False)
 
 
 def collect_job_program() -> ArgumentParser:
@@ -280,7 +289,16 @@ def create_program() -> ArgumentParser:
 	sub_program = program.add_subparsers(dest = 'command')
 	# general
 	sub_program.add_parser('run', help = wording.get('help.run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), create_uis_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
-	sub_program.add_parser('headless-run', help = wording.get('help.headless_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_paths_program(), create_target_path_program(), create_output_path_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
+	sub_program.add_parser('headless-run', help = wording.get('help.headless_run'), parents = [
+		create_config_path_program(),
+		create_temp_path_program(),
+		create_jobs_path_program(),
+		create_source_paths_program(),
+		create_target_path_program(),
+		create_output_path_program(),
+		collect_step_program(),
+		collect_job_program()
+	], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('batch-run', help = wording.get('help.batch_run'), parents = [ create_config_path_program(), create_temp_path_program(), create_jobs_path_program(), create_source_pattern_program(), create_target_pattern_program(), create_output_pattern_program(), collect_step_program(), collect_job_program() ], formatter_class = create_help_formatter_large)
 	sub_program.add_parser('force-download', help = wording.get('help.force_download'), parents = [ create_download_providers_program(), create_download_scope_program(), create_log_level_program() ], formatter_class = create_help_formatter_large)
 	# job manager
@@ -305,3 +323,7 @@ def create_program() -> ArgumentParser:
 def apply_config_path(program : ArgumentParser) -> None:
 	known_args, _ = program.parse_known_args()
 	state_manager.init_item('config_path', known_args.config_path)
+	if hasattr(known_args, 'reference_face_path'):
+		print("DEBUG: reference_face_path in args.py =", known_args.reference_face_path)
+	else:
+		print("DEBUG: reference_face_path not present in this parser")

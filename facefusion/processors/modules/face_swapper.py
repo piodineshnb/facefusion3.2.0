@@ -3,6 +3,8 @@ from functools import lru_cache
 from typing import List, Tuple
 
 import numpy
+import cv2
+import os
 
 import facefusion.choices
 import facefusion.jobs.job_manager
@@ -26,7 +28,25 @@ from facefusion.program_helper import find_argument_group
 from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
+import sys
 
+reference_face_path = None
+for i, arg in enumerate(sys.argv):
+	if arg == '--reference-face-path' and i + 1 < len(sys.argv):
+		reference_face_path = sys.argv[i+1]
+		break
+
+print(f"REFERENCE FACE PATH ARGUMENT (sys.argv): {reference_face_path}")
+if reference_face_path and os.path.exists(reference_face_path):
+	img = cv2.imread(reference_face_path)
+	if img is not None:
+		cv2.imshow('Reference Face', img)
+		cv2.waitKey(0)
+		cv2.destroyAllWindows()
+	else:
+		print("Failed to load image with cv2.")
+else:
+	print("Reference face path not found or file does not exist.")
 
 @lru_cache(maxsize = None)
 def create_static_model_set(download_scope : DownloadScope) -> ModelSet:
