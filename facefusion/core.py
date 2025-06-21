@@ -344,24 +344,32 @@ def conditional_process() -> ErrorCode:
 
 def conditional_append_reference_faces() -> None:
 	if 'reference' in state_manager.get_item('face_selector_mode') and not get_reference_faces():
-		source_frames = read_static_images(state_manager.get_item('source_paths'))
-		source_faces = get_many_faces(source_frames)
-		source_face = get_average_face(source_faces)
-		if is_video(state_manager.get_item('target_path')):
-			reference_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+		reference_face_path = state_manager.get_item('reference_face_path')
+		if reference_face_path:
+			# Use the custom reference face image
+			reference_frame = read_image(reference_face_path)
+			reference_faces = sort_and_filter_faces(get_many_faces([reference_frame]))
+			reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
+			append_reference_face('origin', reference_face)
 		else:
-			reference_frame = read_image(state_manager.get_item('target_path'))
-		reference_faces = sort_and_filter_faces(get_many_faces([ reference_frame ]))
-		reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
-		append_reference_face('origin', reference_face)
+			source_frames = read_static_images(state_manager.get_item('source_paths'))
+			source_faces = get_many_faces(source_frames)
+			source_face = get_average_face(source_faces)
+			if is_video(state_manager.get_item('target_path')):
+				reference_frame = read_video_frame(state_manager.get_item('target_path'), state_manager.get_item('reference_frame_number'))
+			else:
+				reference_frame = read_image(state_manager.get_item('target_path'))
+			reference_faces = sort_and_filter_faces(get_many_faces([ reference_frame ]))
+			reference_face = get_one_face(reference_faces, state_manager.get_item('reference_face_position'))
+			append_reference_face('origin', reference_face)
 
-		if source_face and reference_face:
-			for processor_module in get_processors_modules(state_manager.get_item('processors')):
-				abstract_reference_frame = processor_module.get_reference_frame(source_face, reference_face, reference_frame)
-				if numpy.any(abstract_reference_frame):
-					abstract_reference_faces = sort_and_filter_faces(get_many_faces([ abstract_reference_frame ]))
-					abstract_reference_face = get_one_face(abstract_reference_faces, state_manager.get_item('reference_face_position'))
-					append_reference_face(processor_module.__name__, abstract_reference_face)
+			if source_face and reference_face:
+				for processor_module in get_processors_modules(state_manager.get_item('processors')):
+					abstract_reference_frame = processor_module.get_reference_frame(source_face, reference_face, reference_frame)
+					if numpy.any(abstract_reference_frame):
+						abstract_reference_faces = sort_and_filter_faces(get_many_faces([ abstract_reference_frame ]))
+						abstract_reference_face = get_one_face(abstract_reference_faces, state_manager.get_item('reference_face_position'))
+						append_reference_face(processor_module.__name__, abstract_reference_face)
 
 
 def process_image(start_time : float) -> ErrorCode:
