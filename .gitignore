@@ -8,3 +8,22 @@ venv/
 .idea/
 .vscode/
 .assets/
+# Ignore all Python cache directories and files
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Ignore .assets and assets directories at any level
+.assets/
+assets/
+
+# Ignore virtual environment directories
+.venv/
+venv
+venv/
+
+
+# Ignore specific files at the root
+/mysecret.txt
+/myuser.txt
+/moviepy-1.0.3.tar.gz
