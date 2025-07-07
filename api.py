@@ -67,7 +67,8 @@ async def swap_faces(request: FaceSwapRequest):
                 "--execution-providers", "cuda",
                 "--source", source_path,
                 "--reference-face-path", reference_path,
-                "--face-selector-mode", "reference"
+                "--processors", "face_swapper", "face_enhancer",
+                "--face-selector-mode", "many"
             ]
             process = subprocess.Popen(
                 cmd,
