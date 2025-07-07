@@ -306,7 +306,8 @@ def enhance_face(target_face : Face, temp_vision_frame : VisionFrame) -> VisionF
 	crop_vision_frame = normalize_crop_frame(crop_vision_frame)
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	paste_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
-	temp_vision_frame = blend_frame(temp_vision_frame, paste_vision_frame)
+	face_enhancer_blend = 1 - (state_manager.get_item('face_enhancer_blend') / 100)
+	temp_vision_frame = cv2.addWeighted(temp_vision_frame, face_enhancer_blend, paste_vision_frame, 1 - face_enhancer_blend, 0)
 	return temp_vision_frame
 
 

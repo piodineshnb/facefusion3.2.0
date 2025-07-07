@@ -22,6 +22,9 @@ assets/
 venv
 venv/
 
+# Ignore temp folder at any level
+temp/
+**/temp/
 
 # Ignore specific files at the root
 /mysecret.txt
