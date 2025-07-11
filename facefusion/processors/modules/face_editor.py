@@ -528,5 +528,5 @@ def process_image(source_path : str, target_path : str, output_path : str) -> No
 	write_image(output_path, output_vision_frame)
 
 
-def process_video(source_paths : List[str], temp_frame_paths : List[str]) -> None:
-	processors.multi_process_frames(None, temp_frame_paths, process_frames)
+def process_video(source_paths : List[str], temp_frame_paths : List[str], progress_callback=None) -> None:
+	processors.multi_process_frames(None, temp_frame_paths, process_frames, progress_callback=progress_callback)

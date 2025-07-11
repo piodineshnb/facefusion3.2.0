@@ -29,6 +29,7 @@ from facefusion.thread_helper import conditional_thread_semaphore
 from facefusion.types import ApplyStateItem, Args, DownloadScope, Embedding, Face, InferencePool, ModelOptions, ModelSet, ProcessMode, QueuePayload, UpdateProgress, VisionFrame
 from facefusion.vision import read_image, read_static_image, read_static_images, unpack_resolution, write_image
 import sys
+from facefusion.processors.modules.face_enhancer import enhance_face
 
 reference_face_path = None
 for i, arg in enumerate(sys.argv):
@@ -40,7 +41,7 @@ print(f"REFERENCE FACE PATH ARGUMENT (sys.argv): {reference_face_path}")
 if reference_face_path and os.path.exists(reference_face_path):
 	img = cv2.imread(reference_face_path)
 	if img is not None:
-		cv2.imshow('Reference Face', img)
+		
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()
 	else:
@@ -469,6 +470,9 @@ def swap_face(source_face : Face, target_face : Face, temp_vision_frame : Vision
 
 	crop_mask = numpy.minimum.reduce(crop_masks).clip(0, 1)
 	temp_vision_frame = paste_back(temp_vision_frame, crop_vision_frame, crop_mask, affine_matrix)
+	# Conditionally enhance the swapped face based on environment variable
+	if os.environ.get("ENABLE_FACE_ENHANCE", "1") == "1":
+		temp_vision_frame = enhance_face(target_face, temp_vision_frame)
 	return temp_vision_frame
 
 

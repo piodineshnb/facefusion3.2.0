@@ -12,6 +12,8 @@ from facefusion.temp_helper import get_temp_file_path, get_temp_frames_pattern
 from facefusion.types import AudioBuffer, Commands, EncoderSet, Fps, UpdateProgress
 from facefusion.vision import detect_video_duration, detect_video_fps, predict_video_frame_total
 
+progress_cache = {}
+
 
 def run_ffmpeg_with_progress(commands : Commands, update_progress : UpdateProgress) -> subprocess.Popen[bytes]:
 	log_level = state_manager.get_item('log_level')
@@ -101,7 +103,7 @@ def get_available_encoder_set() -> EncoderSet:
 	return available_encoder_set
 
 
-def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int) -> bool:
+def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fps : Fps, trim_frame_start : int, trim_frame_end : int, job_id : Optional[str] = None) -> bool:
 	extract_frame_total = predict_video_frame_total(target_path, temp_video_fps, trim_frame_start, trim_frame_end)
 	temp_frames_pattern = get_temp_frames_pattern(target_path, '%08d')
 	commands = ffmpeg_builder.chain(
@@ -114,7 +116,12 @@ def extract_frames(target_path : str, temp_video_resolution : str, temp_video_fp
 	)
 
 	with tqdm(total = extract_frame_total, desc = wording.get('extracting'), unit = 'frame', ascii = ' =', disable = state_manager.get_item('log_level') in [ 'warn', 'error' ]) as progress:
-		process = run_ffmpeg_with_progress(commands, lambda frame_number: progress.update(frame_number - progress.n))
+		def update_progress(frame_number):
+			progress.update(frame_number - progress.n)
+			if job_id is not None:
+				print(f"Updating progress_cache[{job_id}] = {frame_number} / {extract_frame_total}")
+				progress_cache[job_id] = frame_number / extract_frame_total
+		process = run_ffmpeg_with_progress(commands, update_progress)
 		return process.returncode == 0
 
 
