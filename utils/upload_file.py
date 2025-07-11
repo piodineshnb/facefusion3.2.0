@@ -4,8 +4,7 @@ from boto3.exceptions import S3UploadFailedError
 import time
 import random
 
-os.environ['AWS_ACCESS_KEY_ID'] = "00578bf03ff616a000000000a"
-os.environ['AWS_SECRET_ACCESS_KEY'] = "K005ZZviU/MgAdlYaPs/zYKpcEkqddg"
+
 
 session = boto3.Session(
 	aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
